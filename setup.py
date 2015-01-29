@@ -1,38 +1,27 @@
-import sys
+import os
 from setuptools import setup
-from setuptools.command.test import test as TestCommand
-
-import walnut
 
 
-class PyTest(TestCommand):
-    def finalize_options(self):
-        TestCommand.finalize_options(self)
-        self.test_args = ['--pep8']
-        self.test_suite = True
-
-    def run_tests(self):
-        import pytest
-        errcode = pytest.main(self.test_args)
-        sys.exit(errcode)
+def read(relpath):
+    filename = os.path.join(os.path.dirname(__file__), relpath)
+    with open(filename) as f:
+        return f.read()
 
 
 setup(
     name='walnut',
-    version=walnut.__version__,
-    description='An asynchronous cache for Twisted',
-    long_description='An asynchronous cache for Twisted',
+    version='0.9.0',
+    description='A asynchronous cache decorator in Python for Twisted',
+    long_description=read('README.rst'),
     license='MIT',
     author='Ryan Johnson',
     author_email='escattone@gmail.com',
-    url='http://github.com/escattone/walnut/',
+    url='https://github.com/escattone/walnut',
     packages=['walnut'],
-    install_requires=['twisted'],
-    cmdclass=dict(test=PyTest),
-    tests_require=['pytest', 'pytest-twisted', 'pytest-pep8', 'txredisapi'],
-    test_suite='walnut.test',
+    install_requires=['twisted>=12'],
     classifiers=[
-        'Programming Language :: Python',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 2 :: Only',
         'Development Status :: 4 - Beta',
         'Natural Language :: English',
         'Framework :: Twisted',
