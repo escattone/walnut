@@ -26,7 +26,6 @@ import uuid
 from types import NoneType
 from collections import namedtuple
 
-from twisted.python import failure
 from twisted.internet.defer import Deferred, maybeDeferred
 from twisted.internet.defer import inlineCallbacks, returnValue
 from walnut.utils import get_qualified_name, LogAdapter, wraps, make_key
