@@ -339,14 +339,14 @@ def async_cache(func=None, redis=None, ttl=None, max_wait=None, keymaker=None,
             # cached in Redis.
             master_deferred = get_computed_or_redis_value(key, args, kwargs)
 
+            local_waiters[key] = Waiters(master=master_deferred,
+                                         slaves=[deferred])
+
             # When the master "fires", in turn "fire" all of its
             # slaves in the same order in which they were received.
             master_deferred.addCallbacks(run_local_waiters, run_local_waiters,
                                          callbackArgs=('callback', key),
                                          errbackArgs=('errback', key))
-
-            local_waiters[key] = Waiters(master=master_deferred,
-                                         slaves=[deferred])
 
         return deferred
 
