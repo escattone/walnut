@@ -309,7 +309,7 @@ def async_cache(func=None, redis=None, ttl=None, max_wait=None, keymaker=None,
 
         returnValue(value)
 
-    def schedule_local_waiters(key, value=SENTINEL):
+    def schedule_local_waiters(key, method, value):
         """
         Schedule the callback or errback of each of the local
         waiters for this key.
@@ -318,10 +318,7 @@ def async_cache(func=None, redis=None, ttl=None, max_wait=None, keymaker=None,
         if deferreds:
             from twisted.internet import reactor
             for deferred in deferreds:
-                if value is SENTINEL:
-                    reactor.callLater(0, deferred.errback, failure.Failure())
-                else:
-                    reactor.callLater(0, deferred.callback, value)
+                reactor.callLater(0, getattr(deferred, method), value)
 
     @inlineCallbacks
     @wraps(func)
@@ -348,11 +345,11 @@ def async_cache(func=None, redis=None, ttl=None, max_wait=None, keymaker=None,
                 finally:
                     # Before the error is re-raised, schedule the error
                     # callbacks on all local waiters for this key, if any.
-                    schedule_local_waiters(key)
+                    schedule_local_waiters(key, 'errback', failure.Failure())
             else:
                 # Before returning the value, schedule the callbacks
                 # for all local waiters for this key, if any.
-                schedule_local_waiters(key, value)
+                schedule_local_waiters(key, 'callback', value)
 
         returnValue(value)
 
