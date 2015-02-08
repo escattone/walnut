@@ -100,7 +100,7 @@ def make_key(func, args, kwargs):
     Make the key for this call of "func" with the given "args" and "kwargs".
     This implementation has limitations in terms of the data types allowed
     for the positional and keyword arguments passed into "func". Specifically,
-    an instance of any data-type whose "repr" value is consistent and
+    an instance of any data-type whose "repr" value is consistent as well as
     equivalent to the "repr" value of any other instance of that same data-type
     that would be considered equivalent. This certainly holds for numbers
     (integers, floats), strings, and datetime.datetime objects, as well as
@@ -122,9 +122,8 @@ def make_key(func, args, kwargs):
 
     if kwargs:
         value += repr(sorted(kwargs.iteritems()))
-    
+
     if len(value) > SHA1_HEXDIGEST_SIZE:
         return sha1(value).hexdigest()
-    
-    return value
 
+    return value
