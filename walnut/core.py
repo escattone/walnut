@@ -24,6 +24,7 @@
 import json
 import uuid
 from types import NoneType
+from collections import namedtuple
 
 from twisted.python import failure
 from twisted.internet.defer import Deferred, maybeDeferred
@@ -64,6 +65,9 @@ PUSH_AND_EXPIRE_SCRIPT = """return \
 PUSH_AND_DELETE_SCRIPT = """return \
 {redis.call('rpush', KEYS[1], ARGV[1]), redis.call('delete', KEYS[2])}
 """
+
+
+Waiters = namedtuple('Waiters', 'master, slaves')
 
 
 def async_cache(func=None, redis=None, ttl=None, max_wait=None, keymaker=None,
@@ -309,48 +313,40 @@ def async_cache(func=None, redis=None, ttl=None, max_wait=None, keymaker=None,
 
         returnValue(value)
 
-    def schedule_local_waiters(key, method, value):
-        """
-        Schedule the callback or errback of each of the local
-        waiters for this key.
-        """
-        deferreds = local_waiters.pop(key)
-        if deferreds:
-            from twisted.internet import reactor
-            for deferred in deferreds:
-                reactor.callLater(0, getattr(deferred, method), value)
+    def run_local_waiters(result, method, key):
+        waiters = local_waiters.pop(key, None)
+        if waiters:
+            for deferred in waiters.slaves:
+                if not deferred.called:
+                    getattr(deferred, method)(result)
 
-    @inlineCallbacks
     @wraps(func)
     def wrapper(*args, **kwargs):
         # Get the key for this invocation of func.
         key = keymaker(func, args, kwargs)
 
+        deferred = Deferred()
+
         if key in local_waiters:
             # Within this process, there has already been a call of func
             # made with the same key, so a value is already being computed
-            # or acquired from Redis.  Instead of initiating another
-            # connection to Redis from this process for the same key, just
-            # "wait" for the result already in progress.
-            deferred = Deferred()
-            local_waiters[key].append(deferred)
-            value = yield deferred
+            # or acquired from Redis.  Instead of again connecting to Redis
+            # from this process for the same key, just "wait" for the result
+            # already in progress.
+            local_waiters[key].slaves.append(deferred)
         else:
-            local_waiters[key] = []
-            try:
-                value = yield get_computed_or_redis_value(key, args, kwargs)
-            except:
-                try:
-                    raise
-                finally:
-                    # Before the error is re-raised, schedule the error
-                    # callbacks on all local waiters for this key, if any.
-                    schedule_local_waiters(key, 'errback', failure.Failure())
-            else:
-                # Before returning the value, schedule the callbacks
-                # for all local waiters for this key, if any.
-                schedule_local_waiters(key, 'callback', value)
+            # Initiate the call to get the computed value or the value
+            # cached in Redis.
+            master_deferred = get_computed_or_redis_value(key, args, kwargs)
 
-        returnValue(value)
+            # When the master "fires", in turn "fire" all of its
+            # slaves in the same order in which they were received.
+            master_deferred.addCallbacks(run_local_waiters, run_local_waiters,
+                                         callbackArgs=('callback', key),
+                                         errbackArgs=('errback', key))
+
+            local_waiters[key] = Waiters(master_deferred, [deferred])
+
+        return deferred
 
     return wrapper
