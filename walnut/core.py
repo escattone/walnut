@@ -345,7 +345,8 @@ def async_cache(func=None, redis=None, ttl=None, max_wait=None, keymaker=None,
                                          callbackArgs=('callback', key),
                                          errbackArgs=('errback', key))
 
-            local_waiters[key] = Waiters(master_deferred, [deferred])
+            local_waiters[key] = Waiters(master=master_deferred,
+                                         slaves=[deferred])
 
         return deferred
 
