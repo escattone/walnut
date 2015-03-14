@@ -8,8 +8,9 @@ walnut
 Summary
 -------
 
-An asynchronous cache decorator in Python for use with
-`Twisted <http://twistedmatrix.com>`__.
+A cross-process/host Redis-based memoizing decorator in Python for
+asynchronous (and sycnhronous) functions in Twisted
+`Twisted <http://twistedmatrix.com>`__ applications.
 
 Installing
 ----------
