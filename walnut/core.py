@@ -1,7 +1,7 @@
 #
 # The MIT License (MIT)
 #
-# Copyright (c) 2014,2015 Ryan Johnson
+# Copyright (c) 2015 Ryan Johnson
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -270,15 +270,6 @@ def async_cache(func=None, redis=None, ttl=None, max_wait=None, keymaker=None,
 
         print 'own_lock={!r}, msg={!r}'.format(own_lock, json_msg)
         print 'value_key={!r}, lock_key={!r}'.format(value_key, lock_key)
-
-        # How do I handle the case where at the time I check the
-        # lock key, it's not expired by on the edge of expiring
-        # such that by the time I check the value key, the value
-        # key (which has the same expiration...or slightly more)
-        # has expired.  Then I'm stuck waiting for a result that
-        # may never come!
-        #
-        # 1) Don't ever expire the value key, just the lock key.
 
         if own_lock:
             # Nope, we own the task of computing the value.

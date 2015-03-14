@@ -11,14 +11,16 @@ def read(relpath):
 setup(
     name='walnut',
     version='0.9.0',
-    description='A asynchronous cache decorator in Python for Twisted',
+    description=('A cross-process/host Redis-based memoizing decorator in '
+                 'Python for asynchronous (and sycnhronous) functions in '
+                 'Twisted applications'),
     long_description=read('README.rst'),
     license='MIT',
     author='Ryan Johnson',
     author_email='escattone@gmail.com',
     url='https://github.com/escattone/walnut',
     packages=['walnut'],
-    install_requires=['twisted>=12'],
+    install_requires=['txredisapi', 'twisted>=12'],
     classifiers=[
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 2 :: Only',

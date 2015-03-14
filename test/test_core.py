@@ -5,9 +5,9 @@ from twisted.internet import defer
 @pytest.inlineCallbacks
 def test_async_cache_basic(redis_conn):
     from twisted.internet import reactor
-    from walnut.redis.twisted import async_cache
+    from walnut import async_cache
 
-    cache = async_cache(redis=redis_conn, skip_on_errors=())
+    cache = async_cache(redis=redis_conn, skip_cache_on=())
 
     @cache
     def echo(val):
