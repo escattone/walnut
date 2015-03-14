@@ -157,7 +157,7 @@ def async_cache(func=None, redis=None, ttl=None, max_wait=None, keymaker=None,
 
         def log_skip(name):
             msg = 'skipping cache for key {!r}: exception in "{}":'
-            log.err(None, msg.format(value_key, name)
+            log.err(None, msg.format(value_key, name))
 
         @inlineCallbacks
         def get_lock_or_cached_value():
