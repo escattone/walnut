@@ -23,12 +23,15 @@
 
 import json
 import uuid
+import functools
 from types import NoneType
 from collections import namedtuple
 
+from twisted.python import log
 from twisted.internet.defer import Deferred, maybeDeferred
 from twisted.internet.defer import inlineCallbacks, returnValue
-from walnut.utils import get_qualified_name, LogAdapter, wraps, make_key
+
+from walnut.utils import get_qualified_name, wraps, make_key
 
 
 default_skip_cache_on = ()
@@ -137,7 +140,7 @@ def async_cache(func=None, redis=None, ttl=None, max_wait=None, keymaker=None,
         json_decode_func = json.loads
 
     if json_encode_func is None:
-        json_encode_func = functools.partial(json.dumps, separators=(',',':'))
+        json_encode_func = functools.partial(json.dumps, separators=(',', ':'))
 
     if id_tag is None:
         id_tag = namespace + '.' + uuid.uuid4().hex
@@ -153,8 +156,8 @@ def async_cache(func=None, redis=None, ttl=None, max_wait=None, keymaker=None,
     def get_computed_or_redis_value(key, args, kwargs):
 
         def log_skip(name):
-            log.exception('skipping cache for key {!r}: exception in "{}":',
-                          value_key, name)
+            msg = 'skipping cache for key {!r}: exception in "{}":'
+            log.err(None, msg.format(value_key, name)
 
         @inlineCallbacks
         def get_lock_or_cached_value():
@@ -199,12 +202,11 @@ def async_cache(func=None, redis=None, ttl=None, max_wait=None, keymaker=None,
                                           (value_key, lock_key),
                                           (EMPTY_JSON_MSG,))
             except:
-                log.exception('exception in '
-                              'notify_waiters_and_release_lock():')
+                log.err(None, 'exception in notify_waiters_and_release_lock():')
             else:
                 # TODO: Only log something if the response is abnormal.
                 msg = 'notify_waiters_and_release_lock(): redis response: {!r}'
-                log.info(msg, result)
+                log.msg(msg.format(result))
 
         @inlineCallbacks
         def cache_value(value):
@@ -230,7 +232,7 @@ def async_cache(func=None, redis=None, ttl=None, max_wait=None, keymaker=None,
                 log_skip('cache_value')
             else:
                 # TODO: Only log something if the response is abnormal.
-                log.info('cache_value(): redis response: {!r}'.format(result))
+                log.msg('cache_value(): redis response: {!r}'.format(result))
 
         @inlineCallbacks
         def wait_for_cached_value():
@@ -299,7 +301,7 @@ def async_cache(func=None, redis=None, ttl=None, max_wait=None, keymaker=None,
             value = msg.get('content', SENTINEL)
 
             if value is SENTINEL:
-                value = yield maybeDeferred(func, *args, **kw)
+                value = yield maybeDeferred(func, *args, **kwargs)
 
         returnValue(value)
 

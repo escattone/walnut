@@ -24,7 +24,6 @@
 import inspect
 import functools
 from hashlib import sha1
-from twisted.python import failure, log
 
 
 SHA1_HEXDIGEST_SIZE = sha1().digest_size * 2
@@ -51,34 +50,6 @@ def get_qualified_name(func):
         raise TypeError('{!r} is not callable'.format(func))
 
     return '.'.join(o.__name__ for o in objs if o)
-
-
-class LogAdapter(object):
-    """
-    Adapts Twisted's log to Python's logging interface.
-    """
-    def exception(self, msg, *args):
-        log.err(None, msg.format(*args))
-
-    def info(self, msg, *args, **kw):
-        self.log(logging.INFO, msg, *args, **kw)
-
-    def debug(self, msg, *args, **kw):
-        self.log(logging.DEBUG, msg, *args, **kw)
-
-    def warning(self, msg, *args, **kw):
-        self.log(logging.WARNING, msg, *args, **kw)
-
-    def error(self, msg, *args, **kw):
-        self.log(logging.ERROR, msg, *args, **kw)
-
-    def log(self, level, msg, *args, **kw):
-        text = msg.format(*args)
-
-        if kw.get('exc_info', False):
-            text = '{}\n{}'.format(text, failure.Failure().getTraceback())
-
-        log.msg(text, logLevel=level)
 
 
 def wraps(wrapped):
