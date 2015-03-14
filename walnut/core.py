@@ -202,7 +202,8 @@ def async_cache(func=None, redis=None, ttl=None, max_wait=None, keymaker=None,
                                           (value_key, lock_key),
                                           (EMPTY_JSON_MSG,))
             except:
-                log.err(None, 'exception in notify_waiters_and_release_lock():')
+                log.err(None,
+                        'exception in notify_waiters_and_release_lock():')
             else:
                 # TODO: Only log something if the response is abnormal.
                 msg = 'notify_waiters_and_release_lock(): redis response: {!r}'
