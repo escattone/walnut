@@ -1,11 +1,12 @@
 import pytest
 from twisted.internet import defer
 
+from walnut import async_cache
+
 
 @pytest.inlineCallbacks
 def test_async_cache_basic(redis_db):
     from twisted.internet import reactor
-    from walnut import async_cache
 
     calls = []
     delay = 0.3
@@ -45,3 +46,34 @@ def test_async_cache_basic(redis_db):
     result = yield d_rob2
     assert calls == ['a=rob, b=drums']
     assert result == 'rob likes drums'
+
+
+def test_async_cache_exceptions(redis_db):
+
+    invalids = (
+        dict(ttl='3'),
+        dict(max_wait='4'),
+        dict(keymaker='text'),
+        dict(skip_cache_on='text'),
+        dict(namespace=3),
+        dict(json_encode_func='text'),
+        dict(json_decode_func='text'),
+        dict(id_tag=5),
+        dict(key_sep=5),
+        dict(lock_key_prefix=5),
+        dict(value_key_prefix=5),
+    )
+
+    for kwargs in invalids:
+        with pytest.raises(TypeError):
+            async_cache(**kwargs)
+
+    invalids = (
+        dict(ttl=0),
+        dict(max_wait=-1),
+        dict(lock_key_prefix='|', value_key_prefix='|'),
+    )
+
+    for kwargs in invalids:
+        with pytest.raises(ValueError):
+            async_cache(**kwargs)
