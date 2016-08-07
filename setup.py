@@ -11,8 +11,8 @@ def read(relpath):
 setup(
     name='walnut',
     version='0.9.0',
-    description=('A cross-process/cross-host Redis-based memoizing decorator in '
-                 'Python for asynchronous (and sycnhronous) functions in '
+    description=('A cross-process/cross-host Redis-based memoizing decorator '
+                 'in Python for asynchronous (and sycnhronous) functions in '
                  'Twisted applications'),
     long_description=read('README.rst'),
     license='MIT',
