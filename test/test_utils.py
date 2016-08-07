@@ -1,10 +1,19 @@
-from walnut import PYTHON_VERSION
+import pytest
+
 from walnut.utils import get_qualified_name
 
 
 class A(object):
 
     class B(object):
+
+        @staticmethod
+        def smeth(cls):
+            pass
+
+        @classmethod
+        def cmeth(cls):
+            pass
 
         def meth1(self):
             pass
@@ -14,6 +23,14 @@ class A(object):
 
         def __call__(self):
             pass
+
+    @staticmethod
+    def smeth(cls):
+        pass
+
+    @classmethod
+    def cmeth(cls):
+        pass
 
     def meth1(self):
         pass
@@ -45,20 +62,36 @@ def test_get_qualified_name():
     assert get_qualified_name(fx) == exp('<lambda>')
     assert get_qualified_name(gen) == exp('gen')
     assert get_qualified_name(func) == exp('func')
-    assert get_qualified_name(any) == '__builtin__.any'
-    assert get_qualified_name(type) == '__builtin__.type'
-    assert get_qualified_name(a.meth1) == exp('A.meth1')
-    assert get_qualified_name(a.meth2) == exp('A.meth2')
-    assert get_qualified_name(A.meth1) == exp('A.meth1')
-    assert get_qualified_name(A.meth2) == exp('A.meth2')
-    assert get_qualified_name(a) == exp('A.__call__')
-    assert get_qualified_name(A.__call__) == exp('A.__call__')
-    assert get_qualified_name(A) == exp('A')
-    # Nested classes are NOT handled correctly.
-    assert get_qualified_name(b.meth1) == exp('B.meth1')
-    assert get_qualified_name(b.meth2) == exp('B.meth2')
-    assert get_qualified_name(A.B.meth1) == exp('B.meth1')
-    assert get_qualified_name(A.B.meth2) == exp('B.meth2')
-    assert get_qualified_name(b) == exp('B.__call__')
-    assert get_qualified_name(A.B.__call__) == exp('B.__call__')
-    assert get_qualified_name(A.B) == exp('B')
+    assert get_qualified_name(A.smeth) == exp('smeth')
+    assert get_qualified_name(A.B.smeth) == exp('smeth')
+    assert get_qualified_name(a.smeth) == exp('smeth')
+    assert get_qualified_name(b.smeth) == exp('smeth')
+
+    invalids = (
+        any,
+        type,
+        a,
+        a.cmeth,
+        a.meth1,
+        a.meth2,
+        a.__call__,
+        b,
+        b.cmeth,
+        b.meth1,
+        b.meth2,
+        b.__call__,
+        A,
+        A.cmeth,
+        A.meth1,
+        A.meth2,
+        A.__call__,
+        A.B,
+        A.B.cmeth,
+        A.B.meth1,
+        A.B.meth2,
+        A.B.__call__,
+    )
+
+    for call in invalids:
+        with pytest.raises(TypeError):
+            get_qualified_name(call)
