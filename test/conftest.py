@@ -1,9 +1,15 @@
+import subprocess
+
 import pytest
-from twisted.internet.defer import Deferred
-from twisted.internet.protocol import ProcessProtocol
 
 
 pytest_plugins = "pytest_twisted"
+
+
+@pytest.yield_fixture(scope='session')
+def redis_db():
+    yield
+    subprocess.check_call(['redis-cli', 'flushall'])
 
 
 @pytest.fixture
