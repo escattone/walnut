@@ -14,10 +14,6 @@ Installing
 ```sh
 pip install walnut
 ```
-or
-```sh
-python setup.py install
-```
 
 Examples
 --------

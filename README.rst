@@ -8,7 +8,7 @@ walnut
 Summary
 -------
 
-A cross-process/host Redis-based memoizing decorator in Python for
+A cross-process/cross-host Redis-based memoizing decorator in Python for
 asynchronous (and sycnhronous) functions in Twisted
 `Twisted <http://twistedmatrix.com>`__ applications.
 
@@ -18,12 +18,6 @@ Installing
 .. code:: sh
 
     pip install walnut
-
-or
-
-.. code:: sh
-
-    python setup.py install
 
 Examples
 --------
@@ -42,4 +36,3 @@ Here are some simple examples to give you the idea:
 
         reactor.callWhenRunning(main)
         reactor.run()
-

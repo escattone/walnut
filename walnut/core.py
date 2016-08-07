@@ -31,22 +31,9 @@ from twisted.python import log
 from twisted.internet.defer import Deferred, maybeDeferred
 from twisted.internet.defer import inlineCallbacks, returnValue
 
+import txredisapi
+
 from walnut.utils import get_qualified_name, wraps, make_key
-
-
-default_skip_cache_on = ()
-try:
-    import txredisapi
-except ImportError:
-    pass
-else:
-    default_skip_cache_on += (txredisapi.ConnectionError,)
-try:
-    import txredis
-except ImportError:
-    pass
-else:
-    default_skip_cache_on += (txredis.ConnectionError,)
 
 
 SENTINEL = object()
@@ -77,39 +64,45 @@ def async_cache(func=None, redis=None, ttl=None, max_wait=None, keymaker=None,
                 json_decode_func=None, id_tag=None, key_sep=':',
                 lock_key_prefix='L', value_key_prefix='V'):
 
-    if not ((ttl is None) or (ttl > 0)):
-        raise ValueError('"ttl" must be greater than zero or None')
+    if not isinstance(ttl, (int, NoneType)):
+        raise TypeError('"ttl" must be an integer or None')
 
-    if not ((max_wait is None) or (max_wait >= 0)):
-        raise ValueError('"max_wait" must be greater than or equal to zero')
+    if isinstance(ttl, int) and (ttl <= 0):
+        raise ValueError('"ttl" must be > 0')
+
+    if not isinstance(max_wait, (int, NoneType)):
+        raise TypeError('"max_wait" must be an integer or None')
+
+    if isinstance(max_wait, int) and (max_wait < 0):
+        raise ValueError('"max_wait" must be >= 0')
 
     if not ((keymaker is None) or callable(keymaker)):
-        raise ValueError('"keymaker" must be a callable or None')
+        raise TypeError('"keymaker" must be a callable or None')
 
     if not isinstance(skip_cache_on, (type, tuple, NoneType)):
-        raise ValueError('"skip_cache_on" must be an exception class, '
-                         'a tuple of exception classes, or None')
+        raise TypeError('"skip_cache_on" must be an exception class, '
+                        'a tuple of exception classes, or None')
 
     if not isinstance(namespace, (basestring, NoneType)):
-        raise ValueError('"namespace" must be a string or None')
+        raise TypeError('"namespace" must be a string or None')
 
     if not ((json_encode_func is None) or callable(json_encode_func)):
-        raise ValueError('"json_encode_func" must be a callable or None')
+        raise TypeError('"json_encode_func" must be a callable or None')
 
     if not ((json_decode_func is None) or callable(json_decode_func)):
-        raise ValueError('"json_decode_func" must be a callable or None')
+        raise TypeError('"json_decode_func" must be a callable or None')
 
     if not isinstance(id_tag, (basestring, NoneType)):
-        raise ValueError('"id_tag" must be a string or None')
+        raise TypeError('"id_tag" must be a string or None')
 
     if not isinstance(key_sep, basestring):
-        raise ValueError('"key_sep" must be a string')
+        raise TypeError('"key_sep" must be a string')
 
     if not isinstance(lock_key_prefix, basestring):
-        raise ValueError('"lock_key_prefix" must be a string')
+        raise TypeError('"lock_key_prefix" must be a string')
 
     if not isinstance(value_key_prefix, basestring):
-        raise ValueError('"value_key_prefix" must be a string')
+        raise TypeError('"value_key_prefix" must be a string')
 
     if lock_key_prefix == value_key_prefix:
         raise ValueError('"lock_key_prefix" cannot equal "value_key_prefix"')
@@ -124,6 +117,9 @@ def async_cache(func=None, redis=None, ttl=None, max_wait=None, keymaker=None,
                                  value_key_prefix=value_key_prefix,
                                  lock_key_prefix=lock_key_prefix)
 
+    if not redis:
+        redis = txredisapi.lazyConnectionPool()
+
     if max_wait is None:
         max_wait = 0
 
@@ -131,7 +127,7 @@ def async_cache(func=None, redis=None, ttl=None, max_wait=None, keymaker=None,
         keymaker = make_key
 
     if skip_cache_on is None:
-        skip_cache_on = default_skip_cache_on
+        skip_cache_on = (txredisapi.ConnectionError,)
 
     if namespace is None:
         namespace = get_qualified_name(func)
@@ -316,7 +312,7 @@ def async_cache(func=None, redis=None, ttl=None, max_wait=None, keymaker=None,
     @wraps(func)
     def wrapper(*args, **kwargs):
         # Get the key for this invocation of func.
-        key = keymaker(func, args, kwargs)
+        key = keymaker(args, kwargs)
 
         deferred = Deferred()
 
