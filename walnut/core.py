@@ -312,7 +312,7 @@ def async_cache(func=None, redis=None, ttl=None, max_wait=None, keymaker=None,
     @wraps(func)
     def wrapper(*args, **kwargs):
         # Get the key for this invocation of func.
-        key = keymaker(func, args, kwargs)
+        key = keymaker(args, kwargs)
 
         deferred = Deferred()
 
