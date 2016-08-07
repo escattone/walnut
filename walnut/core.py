@@ -31,22 +31,9 @@ from twisted.python import log
 from twisted.internet.defer import Deferred, maybeDeferred
 from twisted.internet.defer import inlineCallbacks, returnValue
 
+import txredisapi
+
 from walnut.utils import get_qualified_name, wraps, make_key
-
-
-default_skip_cache_on = ()
-try:
-    import txredisapi
-except ImportError:
-    pass
-else:
-    default_skip_cache_on += (txredisapi.ConnectionError,)
-try:
-    import txredis
-except ImportError:
-    pass
-else:
-    default_skip_cache_on += (txredis.ConnectionError,)
 
 
 SENTINEL = object()
@@ -124,6 +111,9 @@ def async_cache(func=None, redis=None, ttl=None, max_wait=None, keymaker=None,
                                  value_key_prefix=value_key_prefix,
                                  lock_key_prefix=lock_key_prefix)
 
+    if not redis:
+        redis = txredisapi.lazyConnectionPool()
+
     if max_wait is None:
         max_wait = 0
 
@@ -131,7 +121,7 @@ def async_cache(func=None, redis=None, ttl=None, max_wait=None, keymaker=None,
         keymaker = make_key
 
     if skip_cache_on is None:
-        skip_cache_on = default_skip_cache_on
+        skip_cache_on = (txredisapi.ConnectionError,)
 
     if namespace is None:
         namespace = get_qualified_name(func)
