@@ -67,14 +67,14 @@ def async_cache(func=None, redis=None, ttl=None, max_wait=None, keymaker=None,
     if not isinstance(ttl, (int, NoneType)):
         raise TypeError('"ttl" must be an integer or None')
 
-    if not ((ttl is None) or (ttl > 0)):
-        raise ValueError('"ttl" must be > 0 or None')
+    if isinstance(ttl, int) and (ttl <= 0):
+        raise ValueError('"ttl" must be > 0')
 
     if not isinstance(max_wait, (int, NoneType)):
         raise TypeError('"max_wait" must be an integer or None')
 
-    if not ((max_wait is None) or (max_wait >= 0)):
-        raise ValueError('"max_wait" must be >= 0 or None')
+    if isinstance(max_wait, int) and (max_wait < 0):
+        raise ValueError('"max_wait" must be >= 0')
 
     if not ((keymaker is None) or callable(keymaker)):
         raise TypeError('"keymaker" must be a callable or None')
@@ -105,7 +105,7 @@ def async_cache(func=None, redis=None, ttl=None, max_wait=None, keymaker=None,
         raise TypeError('"value_key_prefix" must be a string')
 
     if lock_key_prefix == value_key_prefix:
-        raise TypeError('"lock_key_prefix" cannot equal "value_key_prefix"')
+        raise ValueError('"lock_key_prefix" cannot equal "value_key_prefix"')
 
     if not func:
         return functools.partial(async_cache, redis=redis, ttl=ttl,
