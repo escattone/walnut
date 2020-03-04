@@ -6,7 +6,7 @@ walnut
 Summary
 -------
 A cross-process/host Redis-based memoizing decorator in Python for asynchronous
-(and sycnhronous) functions in [Twisted](http://twistedmatrix.com)
+(and synchronous) functions in [Twisted](http://twistedmatrix.com)
 applications.
 
 Installing
